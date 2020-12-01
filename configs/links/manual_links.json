@@ -1,0 +1,25 @@
+{
+ "links": [
+  {
+  "from_ID":         "gesis-ssoar-42424",
+  "to_ID":           "ZA9999",
+  "correct":         null,
+  "annotation_time": "2020-11-24T16:55:19",
+  "annotator":       "keyword"
+  },
+  {
+  "from_ID":         "gesis-ssoar-42424",
+  "to_ID":           "ZA4770",
+  "correct":         true,
+  "annotation_time": "2020-11-24T16:45:19.1234561",
+  "annotator":       "keyword"
+  },
+  {
+  "from_ID":         "gesis-ssoar-42424",
+  "to_ID":           "ZA4780",
+  "correct":         false,
+  "annotation_time": "2020-11-24T16:35:19.000000",
+  "annotator":       "keyword"
+  }
+ ]
+}
