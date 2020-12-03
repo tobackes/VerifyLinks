@@ -69,11 +69,11 @@ def exists(from_ID,to_ID,client,index):
 
 def update(doc): #TODO: TEST THIS FIRST!
     body = copy(_upd_body);
-    body['_index']    = 'manual-links';
-    body['_id']       = doc['_id'];
-    source            = doc['source'];
-    source['checked'] = True;
-    body['_source']   = source;
+    body['_index']           = 'manual-links';
+    body['_id']              = doc['_id'];
+    source                   = doc['source'];#{'doc':{}} #TODO: Do we need to copy the old data?
+    source['doc']['checked'] = True;
+    body['_source']          = {'doc':source};
     print(body);
     return body;
 
