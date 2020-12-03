@@ -11,10 +11,12 @@ _id_index  = 'gesis-test'#sys.argv[2];
 _out_index = 'gold-links'#sys.argv[3];
 _mal_index = 'bad-links'#sys.argv[4];
 
+_DELETE = True;
+
 _header = ['from_ID','to_ID','verified','annotation_time','annotator'];
 
-_scr_body = { 'query': {'match_all': {} } }; # TODO: If I change from deleting in manual links to a flag then select here everything unchecked
-#_scr_body = {'query':{'bool':{'must':[{'term':{'checked': False}}]}}}; #TODO: TEST THIS FIRST!
+
+_scr_body = { 'query': {'match_all': {} } } if _DELETE else {'query':{'bool':{'must_not':[{'term':{'checked': True}}]}}};
 
 _ind_body = { '_op_type': 'index',
               '_index':   None,
@@ -39,6 +41,7 @@ _del_body = { '_op_type': 'delete',
 _id_body = { 'query': { 'ids' : { 'type': None, 'values': [None] } } }
 
 _lnk_body = {'query':{'bool':{'must':[{'term':{'from_ID': None}}, {'term':{'to_ID':None}}]}}};
+
 
 def valid_date(string):
     try:
@@ -67,13 +70,13 @@ def exists(from_ID,to_ID,client,index):
         return False;
     return results['hits']['hits'][0]['_id'];
 
-def update(doc): #TODO: TEST THIS FIRST!
+def update(doc):
     body = copy(_upd_body);
-    body['_index']           = 'manual-links';
-    body['_id']              = doc['_id'];
-    source                   = doc['source'];#{'doc':{}} #TODO: Do we need to copy the old data?
-    source['doc']['checked'] = True;
-    body['_source']          = {'doc':source};
+    body['_index']    = 'manual-links';
+    body['_id']       = doc['_id'];
+    source            = {};#doc['_source'];
+    source['checked'] = True;
+    body['_source']   = {'doc':source};
     print(body);
     return body;
 
@@ -122,8 +125,10 @@ def get_links():
     while returned > 0:
         for doc in page['hits']['hits']:
             yield check(doc);
-            yield delete(doc); #TODO: Maybe replace by another function update(doc); that adds a flag field checked=True
-            #yield update(doc);
+            if _DELETE:
+                yield delete(doc);
+            else:
+                yield update(doc);
         try:
             page = client.scroll(scroll_id=sid, scroll='2m');
         except:
@@ -146,4 +151,4 @@ while True:
             print(i);
 
     time.sleep(1);
-    print(time.time(),end='\r');
+    print(datetime.datetime.now().isoformat(),end='\r');
