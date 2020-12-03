@@ -13,7 +13,8 @@ _mal_index = 'bad-links'#sys.argv[4];
 
 _header = ['from_ID','to_ID','verified','annotation_time','annotator'];
 
-_scr_body = { 'query': {'match_all': {} } };
+_scr_body = { 'query': {'match_all': {} } }; # TODO: If I change from deleting in manual links to a flag then select here everything unchecked
+#_scr_body = {'query':{'bool':{'must':[{'term':{'checked': False}}]}}}; #TODO: TEST THIS FIRST!
 
 _ind_body = { '_op_type': 'index',
               '_index':   None,
@@ -35,8 +36,7 @@ _del_body = { '_op_type': 'delete',
               '_type': 'link' #TODO: This is due to outdated ES Version on GWS
         }
 
-_id_body = { 'query': { 'ids' : { 'type': None, 'values': [None] } }
-        }
+_id_body = { 'query': { 'ids' : { 'type': None, 'values': [None] } } }
 
 _lnk_body = {'query':{'bool':{'must':[{'term':{'from_ID': None}}, {'term':{'to_ID':None}}]}}};
 
@@ -66,6 +66,16 @@ def exists(from_ID,to_ID,client,index):
     if results['hits']['total'] == 0:
         return False;
     return results['hits']['hits'][0]['_id'];
+
+def update(doc): #TODO: TEST THIS FIRST!
+    body = copy(_upd_body);
+    body['_index']    = 'manual-links';
+    body['_id']       = doc['_id'];
+    source            = doc['source'];
+    source['checked'] = True;
+    body['_source']   = source;
+    print(body);
+    return body;
 
 def delete(doc):
     body = copy(_del_body);
@@ -112,7 +122,8 @@ def get_links():
     while returned > 0:
         for doc in page['hits']['hits']:
             yield check(doc);
-            yield delete(doc);
+            yield delete(doc); #TODO: Maybe replace by another function update(doc); that adds a flag field checked=True
+            #yield update(doc);
         try:
             page = client.scroll(scroll_id=sid, scroll='2m');
         except:
@@ -124,10 +135,15 @@ def get_links():
 
 _client = ES(['search.gesis.org/es-config/'],scheme='http',port=80,timeout=60);
 
-i = 0;
-for success, info in bulk(_client,get_links()):
-    i += 1;
-    if not success:
-        print('A document failed:', info['index']['_id'], info['index']['error']);
-    elif i % 10000 == 0:
-        print(i);
+while True:
+
+    i = 0;
+    for success, info in bulk(_client,get_links()):
+        i += 1;
+        if not success:
+            print('A document failed:', info['index']['_id'], info['index']['error']);
+        elif i % 10000 == 0:
+            print(i);
+
+    time.sleep(1);
+    print(time.time(),end='\r');
