@@ -1,3 +1,4 @@
+#-IMPORTS-----------------------------------------------------------------------------------------------------------------------------------------
 import sys, os
 import time
 import datetime
@@ -5,7 +6,8 @@ import dateutil.parser
 from copy import deepcopy as copy
 from elasticsearch import Elasticsearch as ES
 from elasticsearch.helpers import parallel_bulk as bulk
-
+#-------------------------------------------------------------------------------------------------------------------------------------------------
+#-GLOBAL OBJECTS----------------------------------------------------------------------------------------------------------------------------------
 _in_index  = 'manual-links'#sys.argv[1];
 _id_index  = 'gesis-test'#sys.argv[2];
 _out_index = 'gold-links'#sys.argv[3];
@@ -15,33 +17,28 @@ _DELETE = True;
 
 _header = ['from_ID','to_ID','verified','annotation_time','annotator'];
 
-
 _scr_body = { 'query': {'match_all': {} } } if _DELETE else {'query':{'bool':{'must_not':[{'term':{'checked': True}}]}}};
-
 _ind_body = { '_op_type': 'index',
               '_index':   None,
               '_id':      None,
               '_source': { field:None for field in _header },
               '_type': 'link' #TODO: This is due to outdated ES Version on GWS
         }
-
 _upd_body = { '_op_type': 'update', #TODO: Fix this!
               '_index':   None,
               '_id':      None,
               '_source': { 'doc': { field:None for field in _header } },
               '_type': 'link' #TODO: This is due to outdated ES Version on GWS
         }
-
 _del_body = { '_op_type': 'delete',
               '_index': _in_index,
               '_id': None,
               '_type': 'link' #TODO: This is due to outdated ES Version on GWS
         }
-
-_id_body = { 'query': { 'ids' : { 'type': None, 'values': [None] } } }
-
+_id_body  = { 'query': { 'ids' : { 'type': None, 'values': [None] } } }
 _lnk_body = {'query':{'bool':{'must':[{'term':{'from_ID': None}}, {'term':{'to_ID':None}}]}}};
-
+#-------------------------------------------------------------------------------------------------------------------------------------------------
+#-FUNCTIONS---------------------------------------------------------------------------------------------------------------------------------------
 
 def valid_date(string):
     try:
@@ -136,7 +133,8 @@ def get_links():
             time.sleep(3); continue;
         page_num += 1;
         returned  = len(page['hits']['hits']);
-
+#-------------------------------------------------------------------------------------------------------------------------------------------------
+#-SCRIPT------------------------------------------------------------------------------------------------------------------------------------------
 
 _client = ES(['search.gesis.org/es-config/'],scheme='http',port=80,timeout=60);
 
@@ -152,3 +150,4 @@ while True:
 
     time.sleep(1);
     print(datetime.datetime.now().isoformat(),end='\r');
+#-------------------------------------------------------------------------------------------------------------------------------------------------

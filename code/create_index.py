@@ -1,10 +1,14 @@
+#-IMPORTS-----------------------------------------------------------------------------------------------------------------------------------------
 import sys
 import time
 import json
 from elasticsearch import Elasticsearch as ES
-
+#-------------------------------------------------------------------------------------------------------------------------------------------------
+#-GLOBAL OBJECTS----------------------------------------------------------------------------------------------------------------------------------
 _mapping = sys.argv[1];
 _name    = sys.argv[2];
+#-------------------------------------------------------------------------------------------------------------------------------------------------
+#-SCRIPT------------------------------------------------------------------------------------------------------------------------------------------
 
 index_name = _name+'-'+time.ctime(time.time()).replace(' ','-').replace(':','').lower();
 
@@ -21,7 +25,6 @@ for index in indices:
         client.indices.delete(index=index, ignore=[400, 404]);
 
 response = client.indices.create( index=index_name, body=mapping );
-
 print('created new index', index_name);
 if 'acknowledged' in response:
     if response['acknowledged'] == True:
@@ -32,3 +35,4 @@ elif 'error' in response:
 
 client.indices.put_alias(index=index_name, name=_name);
 print('added alias "',_name,'" to index',index_name);
+#-------------------------------------------------------------------------------------------------------------------------------------------------
