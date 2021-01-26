@@ -1,23 +1,21 @@
 {
  "mappings": {
-  "link":{
-  "properties": {
-   "from_ID": {
-    "type": "keyword"
-   },
-   "to_ID": {
-    "type": "keyword"
-   },
-   "correct": {
-    "type": "boolean"
-   },
-   "annotation_time": {
-    "type": "date"
-   },
-   "annotator": {
-    "type": "keyword"
+   "properties": {
+    "from_ID": {
+     "type": "keyword"
+    },
+    "to_ID": {
+     "type": "keyword"
+    },
+    "correct": {
+     "type": "boolean"
+    },
+    "annotation_time": {
+     "type": "date"
+    },
+    "annotator": {
+     "type": "keyword"
+    }
    }
-  }
-  }
  }
 }
