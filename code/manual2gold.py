@@ -8,31 +8,58 @@ from elasticsearch import Elasticsearch as ES
 from elasticsearch.helpers import parallel_bulk as bulk
 #-------------------------------------------------------------------------------------------------------------------------------------------------
 #-GLOBAL OBJECTS----------------------------------------------------------------------------------------------------------------------------------
-_in_index  = 'manual-links'#sys.argv[1];
-_id_index  = 'gesis-test'#sys.argv[2];
-_out_index = 'gold-links'#sys.argv[3];
-_mal_index = 'bad-links'#sys.argv[4];
+_in_index  = 'manual-links' #sys.argv[1];
+_id_index  = 'gesis-test'   #sys.argv[2];
+_out_index = 'gold-links'   #sys.argv[3];
+_mal_index = 'bad-links'    #sys.argv[4];
 
 _DELETE = True;
 
-_header = ['from_ID','to_ID','verified','annotation_time','annotator'];
+_GWS = True if sys.argv[1].lower() == 'gws' else False;
+
+_SLEEP   = 30                            if _GWS else 3;
+_ADDRESS = 'search.gesis.org/es-config/' if _GWS else 'svko-skg.gesis.intra/';
+_SCHEME  = 'http'                        if _GWS else 'http';
+_PORT    = 80                            if _GWS else 9200;
+_TIMEOUT = 60                            if _GWS else 60;
+
+_header = ['from_ID','to_ID','verified','annotation_time','annotator','to_SubID','from_SubID'];
 
 _scr_body = { 'query': {'match_all': {} } } if _DELETE else {'query':{'bool':{'must_not':[{'term':{'checked': True}}]}}};
+
 _ind_body = { '_op_type': 'index',
               '_index':   None,
               '_id':      None,
               '_source': { field:None for field in _header },
-        }
-_upd_body = { '_op_type': 'update', #TODO: Fix this!
+        }                                                       if not _GWS else { '_op_type': 'index',
+                                                                                   '_index':    None,
+                                                                                   '_id':       None,
+                                                                                   '_source':   { field:None for field in _header },
+                                                                                   '_type':     'link'
+                                                                                  }
+
+_upd_body = { '_op_type': 'update',
               '_index':   None,
               '_id':      None,
               '_source': { 'doc': { field:None for field in _header } },
-        }
+        }                                                                   if not _GWS else { '_op_type': 'update',
+                                                                                               '_index':    None,
+                                                                                               '_id':       None,
+                                                                                               '_source':  { 'doc': { field:None for field in _header } },
+                                                                                               '_type':    'link'
+                                                                                             }
+
 _del_body = { '_op_type': 'delete',
               '_index': _in_index,
               '_id': None,
-        }
+            }                           if not _GWS else {  '_op_type': 'delete',
+                                                            '_index': _in_index,
+                                                            '_id': None,
+                                                            '_type':'link'
+                                                         }
+
 _id_body  = { 'query': { 'ids' : { 'type': None, 'values': [None] } } }
+
 _lnk_body = {'query':{'bool':{'must':[{'term':{'from_ID': None}}, {'term':{'to_ID':None}}]}}};
 #-------------------------------------------------------------------------------------------------------------------------------------------------
 #-FUNCTIONS---------------------------------------------------------------------------------------------------------------------------------------
@@ -60,7 +87,7 @@ def exists(from_ID,to_ID,client,index):
     body['query']['bool']['must'][0]['term']['from_ID'] = from_ID;
     body['query']['bool']['must'][1]['term']['to_ID']   = to_ID;
     results = client.search(index=index,body=body);
-    if results['hits']['total']['value'] == 0:
+    if (_GWS and results['hits']['total']==0) or (not _GWS and results['hits']['total']['value']==0):
         return False;
     return results['hits']['hits'][0]['_id'];
 
@@ -81,7 +108,7 @@ def delete(doc):
     return body;
 
 def check(doc):
-    client    = ES(['svko-skg.gesis.intra/'],scheme='http',port=9200,timeout=60);
+    client    = ES([_ADDRESS],scheme=_SCHEME,port=_PORT,timeout=_TIMEOUT);
     client_id = ES(['search.gesis.org/es-config/'],scheme='http',port=80,timeout=60);
     source    = doc['_source'];
     status    = '';
@@ -111,10 +138,10 @@ def check(doc):
     return body;
 
 def get_links():
-    client   = ES(['svko-skg.gesis.intra/'],scheme='http',port=9200,timeout=60);
+    client   = ES([_ADDRESS],scheme=_SCHEME,port=_PORT,timeout=_TIMEOUT);
     page     = client.search(index=_in_index,scroll='2m',size=100,body=_scr_body);
     sid      = page['_scroll_id'];
-    size     = float(page['hits']['total']['value']);
+    size     = float(page['hits']['total']) if _GWS else float(page['hits']['total']['value']);
     returned = size;
     page_num = 0;
     while returned > 0:
@@ -134,7 +161,7 @@ def get_links():
 #-------------------------------------------------------------------------------------------------------------------------------------------------
 #-SCRIPT------------------------------------------------------------------------------------------------------------------------------------------
 
-_client = ES(['svko-skg.gesis.intra/'],scheme='http',port=9200,timeout=60);
+_client = ES([_ADDRESS],scheme=_SCHEME,port=_PORT,timeout=_TIMEOUT);
 
 while True:
 
@@ -146,6 +173,6 @@ while True:
         elif i % 10000 == 0:
             print(i);
 
-    time.sleep(3);
+    time.sleep(_SLEEP);
     print(datetime.datetime.now().isoformat(),end='\r');
 #-------------------------------------------------------------------------------------------------------------------------------------------------

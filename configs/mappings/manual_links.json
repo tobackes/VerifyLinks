@@ -7,6 +7,12 @@
     "to_ID": {
      "type": "keyword"
     },
+    "from_SubID": {
+     "type": "keyword"
+    },
+    "to_SubID": {
+     "type": "keyword"
+    },
     "correct": {
      "type": "boolean"
     },
