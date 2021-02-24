@@ -24,6 +24,8 @@ for index in indices:
         print('...deleting old index', index);
         client.indices.delete(index=index, ignore=[400, 404]);
 
+input('Enter to continue...');
+
 response = client.indices.create( index=index_name, body=mapping );
 print('created new index', index_name);
 if 'acknowledged' in response:
