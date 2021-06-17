@@ -1,0 +1,29 @@
+{
+ "mappings": {
+   "links": {
+       "properties": {
+        "from_ID": {
+         "type": "keyword"
+        },
+        "to_ID": {
+         "type": "keyword"
+        },
+        "from_SubID": {
+         "type": "keyword"
+        },
+        "to_SubID": {
+         "type": "keyword"
+        },
+        "correct": {
+         "type": "boolean"
+        },
+        "annotation_time": {
+         "type": "date"
+        },
+        "annotator": {
+         "type": "keyword"
+        }
+       }
+   }
+ }
+}

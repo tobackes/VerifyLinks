@@ -1,0 +1,21 @@
+The current link data model is as follows:
+
+_id             [required]  e.g. "gesis-ssoar-44540--ALLBUS_2010-->ZA4612"
+from_ID         [required]  e.g. "gesis-ssoar-44540"
+to_ID           [required]  e.g. "ZA4612"
+annotation_time [required]  e.g. "2021-06-17T10:34:42+02:00"
+correct         [required]  true / false / null
+annotator       [required]  default: "MaLiViTo"
+from_SubID      [optional]  default: null
+to_SubID        [optional]  default: null
+
+Explanation:
+
+_id             the identifier of the link
+from_ID         the identifier of the document from which the link goes out
+toID            the identifier of the document to which the link leads
+annotation_time the ISO timestamp of the time at which the verification or falsification took place
+correct         verified / falsified / undecidable
+annotator       the identifier of the entity that has done the verification, falsification
+from_SubID      the identifier of the version or whatever sub-document is specified as a source of link
+to_SubID        the identifier of the version or whatever sub-document is specified as a target of link

@@ -12,7 +12,9 @@ _name    = sys.argv[2];
 
 index_name = _name+'-'+time.ctime(time.time()).replace(' ','-').replace(':','').lower();
 
-client = ES(['svko-skg.gesis.intra/'],scheme='http',port=9200,timeout=60);
+#client = ES(['svko-skg.gesis.intra/'],scheme='http',port=9200,timeout=60);
+client = ES(['search.gesis.org/es-config/'],scheme='http',port=80,timeout=60);
+#client = ES(['localhost'],scheme='http',port=9202,timeout=60);
 
 IN      = open(_mapping);
 mapping = json.load(IN);
@@ -26,7 +28,7 @@ for index in indices:
 
 input('Enter to continue...');
 
-response = client.indices.create( index=index_name, body=mapping );
+response = client.indices.create( index=index_name)#, body=mapping );
 print('created new index', index_name);
 if 'acknowledged' in response:
     if response['acknowledged'] == True:
