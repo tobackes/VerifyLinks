@@ -3,23 +3,26 @@
   {
   "from_ID":         "gesis-ssoar-42424",
   "to_ID":           "ZA9999",
-  "correct":         null,
+  "correct":         0,
+  "utilized":        1,
   "annotation_time": "2020-11-24T16:55:19",
-  "annotator":       "keyword"
+  "annotator":       "tester"
   },
   {
   "from_ID":         "gesis-ssoar-42424",
   "to_ID":           "ZA4770",
-  "correct":         true,
+  "correct":         1,
+  "utilized":        1,
   "annotation_time": "2020-11-24T16:45:19.1234561",
-  "annotator":       "keyword"
+  "annotator":       "tester"
   },
   {
   "from_ID":         "gesis-ssoar-42424",
   "to_ID":           "ZA4780",
-  "correct":         false,
+  "correct":         2,
+  "utilized":        1,
   "annotation_time": "2020-11-24T16:35:19.000000",
-  "annotator":       "keyword"
+  "annotator":       "tester"
   }
  ]
 }

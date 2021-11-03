@@ -14,7 +14,10 @@
      "type": "keyword"
     },
     "correct": {
-     "type": "boolean"
+     "type": "integer"
+    },
+    "utilized": {
+     "type": "integer"
     },
     "annotation_time": {
      "type": "date"

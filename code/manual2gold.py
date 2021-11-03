@@ -18,10 +18,12 @@ _DELETE = True;
 _GWS = True if sys.argv[1].lower() == 'gws' else False;
 
 _SLEEP   = 30                            if _GWS else 3;
+_SLEEP_  = 60                            if _GWS else 30;
 _ADDRESS = 'search.gesis.org/es-config/' if _GWS else 'svko-skg.gesis.intra/';
 _SCHEME  = 'http'                        if _GWS else 'http';
 _PORT    = 80                            if _GWS else 9200;
 _TIMEOUT = 60                            if _GWS else 60;
+_TRIES   = 3;
 
 _header = ['from_ID','to_ID','verified','annotation_time','annotator','to_SubID','from_SubID'];
 
@@ -118,8 +120,12 @@ def check(doc):
         source['annotation_time'] = valid_date(source['annotation_time']);
     if (not 'annotator' in source) or (not isinstance(source['annotator'],str)):    # annotator must be string
         status += '/ no annotator or not string /';
-    if (not 'correct' in source) or (not (isinstance(source['correct'],bool) or source['correct']==None)):    # correct must be bool or None
-        status += '/ correct needs to be boolean or none /';
+    if (not 'correct' in source) or (not source['correct'] in [0,1,2]):    # correct must be 0, 1 or 2
+        status += '/ correct needs to be 0, 1, or 2 /';
+    if ('utilized' in source) and (not source['utilized'] in [0,1,2]):     # correct must be 0, 1 or 2
+        status += '/ utilized needs to be 0, 1, or 2 /';
+    if ('correct' in source and 'utilized' in source) and (source['correct']!=None and source['utilized']!=None) and (not (source['correct'],source['utilized'],) in [(0,0,),(1,0,),(1,1,),(1,2,),(2,0,),(2,2,)]): # not all combinations make sense
+        status += '/ combination of correct and utilized makes no sense /';
     if (not 'from_ID' in source) or (not valid_id(source['from_ID'],'publication',client_id)):    # from_ID must be an id in gws
         status += '/ no or nonexistant from_ID /';
     if (not 'to_ID' in source) or (not valid_id(source['to_ID'],'research_data',client_id)):    # from_ID must be an id in gws
@@ -142,7 +148,7 @@ def get_links():
     page     = client.search(index=_in_index,scroll='2m',size=100,body=_scr_body);
     sid      = page['_scroll_id'];
     size     = float(page['hits']['total']) if _GWS else float(page['hits']['total']['value']);
-    returned = size;
+    returned = len(page['hits']['hits']);#size;
     page_num = 0;
     while returned > 0:
         for doc in page['hits']['hits']:
@@ -151,13 +157,18 @@ def get_links():
                 yield delete(doc);
             else:
                 yield update(doc);
-        try:
-            page = client.scroll(scroll_id=sid, scroll='2m');
-        except:
-            print('WARNING: Some problem occured while scrolling. Sleeping for 3s and retrying...');
-            time.sleep(3); continue;
-        page_num += 1;
-        returned  = len(page['hits']['hits']);
+        scroll_tries = 0;
+        while scroll_tries <= _TRIES:
+            try:
+                page      = client.scroll(scroll_id=sid, scroll='2m');
+                returned  = len(page['hits']['hits']);
+                page_num += 1;
+            except Exception as exception:
+                print(exception);
+                print('WARNING: Some problem occured while scrolling. Sleeping for 3s and retrying...');
+                scroll_tries += 1;
+                time.sleep(3); continue;
+            break;
 #-------------------------------------------------------------------------------------------------------------------------------------------------
 #-SCRIPT------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -165,14 +176,17 @@ _client = ES([_ADDRESS],scheme=_SCHEME,port=_PORT,timeout=_TIMEOUT);
 
 while True:
 
-    i = 0;
-    for success, info in bulk(_client,get_links()):
-        i += 1;
-        if not success:
-            print('A document failed:', info['index']['_id'], info['index']['error']);
-        elif i % 10000 == 0:
-            print(i);
-
+    try:
+        i = 0;
+        for success, info in bulk(_client,get_links()):
+            i += 1;
+            if not success:
+                print('A document failed:', info['index']['_id'], info['index']['error']);
+            elif i % 10000 == 0:
+                print(i);
+    except Exception as exception:
+        print(exception);
+        time.sleep(_SLEEP_);
     time.sleep(_SLEEP);
     print(datetime.datetime.now().isoformat(),end='\r');
 #-------------------------------------------------------------------------------------------------------------------------------------------------

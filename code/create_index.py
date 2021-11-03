@@ -28,7 +28,7 @@ for index in indices:
 
 input('Enter to continue...');
 
-response = client.indices.create( index=index_name)#, body=mapping );
+response = client.indices.create( index=index_name, body=mapping );
 print('created new index', index_name);
 if 'acknowledged' in response:
     if response['acknowledged'] == True:
