@@ -1,6 +1,6 @@
 {
  "mappings": {
-   "links": {
+   "link": {
        "properties": {
         "from_ID": {
          "type": "keyword"
